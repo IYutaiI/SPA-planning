@@ -14,7 +14,6 @@ NC='\033[0m'
 
 APP_DIR="/opt/spa-planning"
 WEB_DIR="/var/www/spa-planning"
-BRANCH="${1:-main}"
 
 echo -e "${CYAN}========================================${NC}"
 echo -e "${CYAN}   Mise a jour de SPA-Planning${NC}"
@@ -42,8 +41,8 @@ echo -e "${YELLOW}[1/5] Version actuelle: ${CURRENT_COMMIT}${NC}"
 
 # Recuperer les changements
 echo -e "${YELLOW}[2/5] Recuperation des mises a jour...${NC}"
-git fetch origin
-git checkout "$BRANCH" 2>/dev/null || git checkout -b "$BRANCH" "origin/$BRANCH"
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo -e "       Branche: ${CYAN}${BRANCH}${NC}"
 git pull origin "$BRANCH"
 
 NEW_COMMIT=$(git rev-parse --short HEAD)
