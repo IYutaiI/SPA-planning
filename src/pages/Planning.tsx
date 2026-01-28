@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Users, LayoutGrid, ChevronLeft, ChevronRight, Plus, Check, User } from 'lucide-react';
+import { Calendar, Users, LayoutGrid, ChevronLeft, ChevronRight, Plus, Check, User, Clock } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 
 type ViewType = 'agenda' | 'dispo' | 'synthese';
@@ -28,6 +28,8 @@ export const Planning = () => {
   };
 
   const weekDates = getWeekDates();
+  const today = new Date().getDay();
+  const todayIndex = today === 0 ? 6 : today - 1;
 
   const getPlayerAvailability = (playerId: string, day: string, hour: number) => {
     return availabilities.find(
@@ -53,89 +55,96 @@ export const Planning = () => {
   };
 
   return (
-    <div className="bg-dark-800 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      {/* Header Controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 p-1 rounded-xl glass-light">
+          {[
+            { id: 'agenda', icon: Calendar, label: 'Agenda' },
+            { id: 'dispo', icon: Users, label: 'Dispo' },
+            { id: 'synthese', icon: LayoutGrid, label: 'Synthese' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setView(tab.id as ViewType)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-300 ${
+                view === tab.id
+                  ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/25'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <tab.icon size={16} />
+              <span className="text-sm font-medium">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="flex items-center gap-3">
-          <Calendar className="text-purple-500" size={24} />
-          <h1 className="text-xl font-bold text-white">Système de Planning Team</h1>
-        </div>
-        <div className="flex items-center gap-2 bg-dark-700 rounded-lg p-1">
-          <button
-            onClick={() => setView('agenda')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              view === 'agenda' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Calendar size={16} />
-            <span>Agenda</span>
-          </button>
-          <button
-            onClick={() => setView('dispo')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              view === 'dispo' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Users size={16} />
-            <span>Dispo</span>
-          </button>
-          <button
-            onClick={() => setView('synthese')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              view === 'synthese' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <LayoutGrid size={16} />
-            <span>Synthèse</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2 bg-dark-700 rounded-lg px-4 py-2">
-          <button onClick={() => navigateWeek('prev')} className="text-gray-400 hover:text-white">
-            <ChevronLeft size={20} />
-          </button>
-          <div className="text-center px-4">
-            <span className="text-purple-400 text-xs font-medium">SEMAINE DE</span>
-            <div className="text-white font-medium">{formatWeekLabel()}</div>
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl glass-light">
+            <button
+              onClick={() => navigateWeek('prev')}
+              className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="text-center px-3">
+              <span className="text-purple-400 text-xs font-medium uppercase tracking-wider">Semaine de</span>
+              <div className="text-white font-semibold">{formatWeekLabel()}</div>
+            </div>
+            <button
+              onClick={() => navigateWeek('next')}
+              className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
-          <button onClick={() => navigateWeek('next')} className="text-gray-400 hover:text-white">
-            <ChevronRight size={20} />
+
+          <button className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium">
+            <Plus size={16} />
+            <span>Planifier</span>
           </button>
         </div>
-        <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-          <Plus size={16} />
-          <span>Planifier</span>
-        </button>
       </div>
 
+      {/* Agenda View */}
       {view === 'agenda' && (
         <div className="grid grid-cols-7 gap-3">
           {weekDates.map((item, index) => (
             <div
               key={item.day}
-              className={`rounded-xl p-4 ${
-                index === 3 ? 'bg-purple-600' : 'bg-dark-700'
+              className={`card p-4 transition-all duration-300 ${
+                index === todayIndex
+                  ? 'gradient-border glow-purple'
+                  : 'hover:border-white/10'
               }`}
             >
               <div className="text-center mb-4">
-                <div className={`text-xs font-medium ${index === 3 ? 'text-purple-200' : 'text-gray-500'}`}>
-                  {item.day.toUpperCase()}
+                <div className={`text-xs font-semibold uppercase tracking-wider ${
+                  index === todayIndex ? 'text-purple-400' : 'text-gray-500'
+                }`}>
+                  {item.day}
                 </div>
-                <div className={`text-2xl font-bold ${index === 3 ? 'text-white' : 'text-white'}`}>
+                <div className={`text-3xl font-bold mt-1 ${
+                  index === todayIndex ? 'gradient-text' : 'text-white'
+                }`}>
                   {item.date}
                 </div>
+                {index === todayIndex && (
+                  <div className="mt-2 px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-xs font-medium inline-block">
+                    Aujourd'hui
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 {getEventsForSlot(index, 18).map(event => (
                   <div
                     key={event.id}
-                    className="rounded-lg p-3"
-                    style={{ backgroundColor: event.color || '#1e1b4b' }}
+                    className="rounded-xl p-3 glass-light border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer"
                   >
                     <div className="text-white font-medium text-sm">{event.title}</div>
-                    <div className="text-gray-400 text-xs">
-                      {event.startTime} - {event.endTime}
+                    <div className="flex items-center gap-1 text-gray-400 text-xs mt-1">
+                      <Clock size={10} />
+                      <span>{event.startTime} - {event.endTime}</span>
                     </div>
                   </div>
                 ))}
@@ -145,51 +154,58 @@ export const Planning = () => {
         </div>
       )}
 
+      {/* Dispo View */}
       {view === 'dispo' && (
         <div className="flex gap-6">
-          <div className="w-48 space-y-2">
+          <div className="w-52 space-y-2">
             {players.map(player => (
               <button
                 key={player.id}
                 onClick={() => setSelectedPlayer(player.id)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
                   selectedPlayer === player.id
-                    ? 'bg-dark-600 border border-purple-500'
-                    : 'bg-dark-700 hover:bg-dark-600'
+                    ? 'glass-light border border-purple-500/50 shadow-lg shadow-purple-500/10'
+                    : 'glass-light hover:bg-white/10'
                 }`}
               >
-                <div className="w-8 h-8 rounded-full bg-dark-500 flex items-center justify-center">
-                  <User size={16} className="text-gray-400" />
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  selectedPlayer === player.id
+                    ? 'bg-gradient-to-br from-purple-500 to-cyan-500'
+                    : 'bg-dark-600'
+                }`}>
+                  <User size={18} className="text-white" />
                 </div>
                 <span className="text-white font-medium">{player.name}</span>
+                {selectedPlayer === player.id && (
+                  <div className="ml-auto w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                )}
               </button>
             ))}
-            <div className="mt-6 p-3 bg-dark-700 rounded-lg">
-              <div className="text-gray-500 text-xs font-medium mb-3">LÉGENDE</div>
+
+            <div className="card p-4 mt-4">
+              <div className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">Legende</div>
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-green-500"></div>
-                  <span className="text-sm text-gray-300">Disponible</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-yellow-500"></div>
-                  <span className="text-sm text-gray-300">Pas sûr (Jaune)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-red-500"></div>
-                  <span className="text-sm text-gray-300">Indisponible</span>
-                </div>
+                {[
+                  { color: 'bg-green-500', label: 'Disponible' },
+                  { color: 'bg-yellow-500', label: 'Incertain' },
+                  { color: 'bg-red-500', label: 'Indisponible' },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                    <span className="text-sm text-gray-300">{item.label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-x-auto">
+          <div className="flex-1 card p-4 overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr>
-                  <th className="text-left text-gray-500 text-sm p-2">JOUR</th>
+                  <th className="text-left text-gray-500 text-xs font-semibold uppercase p-3">Jour</th>
                   {hours.map(hour => (
-                    <th key={hour} className="text-gray-500 text-sm p-2 min-w-[40px]">
+                    <th key={hour} className="text-gray-500 text-xs font-semibold p-3 min-w-[44px]">
                       {hour}h
                     </th>
                   ))}
@@ -197,21 +213,21 @@ export const Planning = () => {
               </thead>
               <tbody>
                 {days.map(day => (
-                  <tr key={day} className="border-t border-dark-600">
-                    <td className="text-white p-2 font-medium">{day}</td>
+                  <tr key={day} className="border-t border-white/5">
+                    <td className="text-white p-3 font-medium">{day}</td>
                     {hours.map(hour => {
                       const status = getPlayerAvailability(selectedPlayer, day, hour);
                       return (
                         <td key={hour} className="p-1">
                           <div
-                            className={`w-8 h-8 rounded flex items-center justify-center ${
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-110 ${
                               status === 'available'
-                                ? 'bg-green-500/20'
+                                ? 'bg-green-500/20 border border-green-500/30'
                                 : status === 'maybe'
-                                ? 'bg-yellow-500/20'
+                                ? 'bg-yellow-500/20 border border-yellow-500/30'
                                 : status === 'unavailable'
-                                ? 'bg-red-500/20'
-                                : 'bg-dark-700'
+                                ? 'bg-red-500/20 border border-red-500/30'
+                                : 'bg-dark-600 hover:bg-dark-500'
                             }`}
                           >
                             {status === 'available' && <Check size={14} className="text-green-400" />}
@@ -227,91 +243,84 @@ export const Planning = () => {
         </div>
       )}
 
+      {/* Synthese View */}
       {view === 'synthese' && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-white">Synthèse Équipe</h2>
-              <p className="text-gray-500 text-sm">Aperçu rapide des créneaux (12h - 00h).</p>
+              <h2 className="text-lg font-bold text-white">Synthese Equipe</h2>
+              <p className="text-gray-500 text-sm">Apercu des disponibilites (12h - 00h)</p>
             </div>
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span className="text-gray-400">5+ Dispo</span>
+                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500"></div>
+                <span className="text-gray-400">5/5 Dispo</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span className="text-gray-400">Activité</span>
+                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <span className="text-gray-400">Activite</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-3 mb-4">
+          <div className="grid grid-cols-7 gap-3">
             {weekDates.map((item, index) => (
               <div
                 key={item.day}
-                className={`rounded-xl p-3 text-center ${
-                  index === 3 ? 'bg-purple-600' : 'bg-dark-700'
+                className={`card p-3 text-center ${
+                  index === todayIndex ? 'gradient-border' : ''
                 }`}
               >
-                <div className={`text-xs font-medium ${index === 3 ? 'text-purple-200' : 'text-gray-500'}`}>
+                <div className={`text-xs font-semibold uppercase ${
+                  index === todayIndex ? 'text-purple-400' : 'text-gray-500'
+                }`}>
                   {item.dayShort}
                 </div>
-                <div className={`text-lg font-bold ${index === 3 ? 'text-white' : 'text-white'}`}>
+                <div className={`text-xl font-bold ${
+                  index === todayIndex ? 'gradient-text' : 'text-white'
+                }`}>
                   {item.date}
-                </div>
-                <div className={`text-xs ${index === 3 ? 'text-purple-200' : 'text-gray-500'}`}>
-                  {item.month}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="card overflow-hidden">
             <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left text-gray-500 text-sm p-2 w-16"></th>
-                  {weekDates.map((item) => (
-                    <th key={item.day} className="p-1" colSpan={1}>
-                      <div className="grid grid-cols-2 gap-0.5">
-                        {hours.slice(0, 2).map(hour => (
-                          <div key={hour} className="text-gray-500 text-xs">{hour}h</div>
-                        ))}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
               <tbody>
                 {hours.map(hour => (
-                  <tr key={hour} className="border-t border-dark-600">
-                    <td className="text-gray-500 text-sm p-2 font-medium">{hour}:00</td>
+                  <tr key={hour} className="border-t border-white/5">
+                    <td className="text-gray-500 text-sm p-3 font-medium w-20">{hour}:00</td>
                     {weekDates.map((item, dayIndex) => {
                       const count = getSlotAvailabilityCount(days[dayIndex], hour);
                       const slotEvents = getEventsForSlot(dayIndex, hour);
                       const hasFullTeam = count === 5;
 
                       return (
-                        <td key={item.day} className="p-1">
+                        <td key={item.day} className="p-1.5">
                           <div
-                            className={`rounded p-2 min-h-[50px] ${
-                              hasFullTeam ? 'bg-green-500/20 border border-green-500/30' : 'bg-dark-700'
+                            className={`rounded-xl p-2.5 min-h-[56px] transition-all ${
+                              hasFullTeam
+                                ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/10 border border-green-500/30'
+                                : 'glass-light'
                             }`}
                           >
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-gray-400 text-xs">{hour}h</span>
-                              <span className={`text-xs font-medium ${hasFullTeam ? 'text-green-400' : 'text-gray-500'}`}>
+                              <span className={`text-xs font-semibold ${
+                                hasFullTeam ? 'text-green-400' : 'text-gray-500'
+                              }`}>
                                 {count}/5
                               </span>
+                              {hasFullTeam && (
+                                <Check size={12} className="text-green-400" />
+                              )}
                             </div>
                             {slotEvents.map(event => (
                               <div
                                 key={event.id}
-                                className="rounded px-2 py-1 mt-1 text-xs"
-                                style={{ backgroundColor: event.color || '#1e1b4b' }}
+                                className="rounded-lg px-2 py-1 bg-purple-500/30 text-xs mt-1"
                               >
-                                <div className="text-white font-medium truncate">{event.title.toUpperCase()}</div>
+                                <div className="text-white font-medium truncate">{event.title}</div>
                               </div>
                             ))}
                           </div>
